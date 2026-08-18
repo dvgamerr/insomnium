@@ -1,7 +1,7 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
-import { ServiceError, StatusObject } from '@grpc/grpc-js';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
+import { IconName } from "@fortawesome/fontawesome-svg-core";
+import { ServiceError, StatusObject } from "@grpc/grpc-js";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import React, { FC, Fragment, useEffect, useRef, useState } from "react";
 import {
   Button,
   DropIndicator,
@@ -16,7 +16,7 @@ import {
   Select,
   SelectValue,
   useDragAndDrop,
-} from 'react-aria-components';
+} from "react-aria-components";
 import {
   LoaderFunction,
   redirect,
@@ -25,69 +25,73 @@ import {
   useParams,
   useRouteLoaderData,
   useSearchParams,
-} from 'react-router-dom';
+} from "react-router-dom";
 
-import { SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
-import { ChangeBufferEvent, database as db } from '../../common/database';
-import { generateId } from '../../common/misc';
-import { PlatformKeyCombinations } from '../../common/settings';
-import type { GrpcMethodInfo } from '../../main/ipc/grpc';
-import * as models from '../../models';
-import { Environment } from '../../models/environment';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
-import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
+import { SORT_ORDERS, SortOrder, sortOrderName } from "../../common/constants";
+import { ChangeBufferEvent, database as db } from "../../common/database";
+import { generateId } from "../../common/misc";
+import { PlatformKeyCombinations } from "../../common/settings";
+import type { GrpcMethodInfo } from "../../main/ipc/grpc";
+import * as models from "../../models";
+import { Environment } from "../../models/environment";
+import {
+  GrpcRequest,
+  isGrpcRequest,
+  isGrpcRequestId,
+} from "../../models/grpc-request";
+import { getByParentId as getGrpcRequestMetaByParentId } from "../../models/grpc-request-meta";
 import {
   isEventStreamRequest,
   isRequest,
   isRequestId,
   Request,
-} from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
+} from "../../models/request";
+import { isRequestGroup, RequestGroup } from "../../models/request-group";
+import { getByParentId as getRequestMetaByParentId } from "../../models/request-meta";
 import {
   isWebSocketRequest,
   isWebSocketRequestId,
   WebSocketRequest,
-} from '../../models/websocket-request';
-import { guard } from '../../utils/guard';
-import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
-import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
+} from "../../models/websocket-request";
+import { guard } from "../../utils/guard";
+import { RequestActionsDropdown } from "../components/dropdowns/request-actions-dropdown";
+import { RequestGroupActionsDropdown } from "../components/dropdowns/request-group-actions-dropdown";
 
-import { ErrorBoundary } from '../components/error-boundary';
-import { Icon } from '../components/icon';
-import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import { showModal, showPrompt } from '../components/modals';
-import { AskModal } from '../components/modals/ask-modal';
-import { CookiesModal } from '../components/modals/cookies-modal';
-import { GenerateCodeModal } from '../components/modals/generate-code-modal';
-import { PasteCurlModal } from '../components/modals/paste-curl-modal';
-import { PromptModal } from '../components/modals/prompt-modal';
-import { RequestSettingsModal } from '../components/modals/request-settings-modal';
-import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
-import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
-import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
-import { RequestPane } from '../components/panes/request-pane';
-import { ResponsePane } from '../components/panes/response-pane';
-import { SidebarLayout } from '../components/sidebar-layout';
-import { getMethodShortHand } from '../components/tags/method-tag';
-import { ConnectionCircle } from '../components/websockets/action-bar';
-import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
-import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
-import { useReadyState } from '../hooks/use-ready-state';
+import { ErrorBoundary } from "../components/error-boundary";
+import { Icon } from "../components/icon";
+import { useDocBodyKeyboardShortcuts } from "../components/keydown-binder";
+import { showModal, showPrompt } from "../components/modals";
+import { AskModal } from "../components/modals/ask-modal";
+import { CookiesModal } from "../components/modals/cookies-modal";
+import { GenerateCodeModal } from "../components/modals/generate-code-modal";
+import { PasteCurlModal } from "../components/modals/paste-curl-modal";
+import { PromptModal } from "../components/modals/prompt-modal";
+import { RequestSettingsModal } from "../components/modals/request-settings-modal";
+import { WorkspaceEnvironmentsEditModal } from "../components/modals/workspace-environments-edit-modal";
+import { GrpcRequestPane } from "../components/panes/grpc-request-pane";
+import { GrpcResponsePane } from "../components/panes/grpc-response-pane";
+import { PlaceholderRequestPane } from "../components/panes/placeholder-request-pane";
+import { RequestPane } from "../components/panes/request-pane";
+import { ResponsePane } from "../components/panes/response-pane";
+import { SidebarLayout } from "../components/sidebar-layout";
+import { getMethodShortHand } from "../components/tags/method-tag";
+import { ConnectionCircle } from "../components/websockets/action-bar";
+import { RealtimeResponsePane } from "../components/websockets/realtime-response-pane";
+import { WebSocketRequestPane } from "../components/websockets/websocket-request-pane";
+import { useReadyState } from "../hooks/use-ready-state";
 import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
   useRequestMetaPatcher,
-} from '../hooks/use-request';
+} from "../hooks/use-request";
 import {
   GrpcRequestLoaderData,
   RequestLoaderData,
   WebSocketRequestLoaderData,
-} from './request';
-import { RootLoaderData } from './root';
-import { Child, WorkspaceLoaderData } from './workspace';
-import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
+} from "./request";
+import { RootLoaderData } from "./root";
+import { Child, WorkspaceLoaderData } from "./workspace";
+import { WorkspaceSyncDropdown } from "../components/dropdowns/workspace-sync-dropdown";
 
 export interface GrpcMessage {
   id: string;
@@ -95,8 +99,12 @@ export interface GrpcMessage {
   created: number;
 }
 
-const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | WebSocketRequest): string => {
-  return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
+const getRequestNameOrFallback = (
+  doc: Request | RequestGroup | GrpcRequest | WebSocketRequest
+): string => {
+  return !isRequestGroup(doc)
+    ? doc.name || doc.url || "Untitled request"
+    : doc.name || "Untitled folder";
 };
 
 export interface GrpcRequestState {
@@ -120,30 +128,38 @@ const INITIAL_GRPC_REQUEST_STATE: Omit<GrpcRequestState, "requestId"> = {
 export const loader: LoaderFunction = async ({ params }) => {
   if (!params.requestId) {
     const { projectId, workspaceId, organizationId } = params;
-    guard(workspaceId, 'Workspace ID is required');
-    guard(projectId, 'Project ID is required');
+    guard(workspaceId, "Workspace ID is required");
+    guard(projectId, "Project ID is required");
     const activeWorkspace = await models.workspace.getById(workspaceId);
-    guard(activeWorkspace, 'Workspace not found');
+    guard(activeWorkspace, "Workspace not found");
     const activeWorkspaceMeta =
       await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-    guard(activeWorkspaceMeta, 'Workspace meta not found');
+    guard(activeWorkspaceMeta, "Workspace meta not found");
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
-    const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
+    const activeRequest = activeRequestId
+      ? await models.request.getById(activeRequestId)
+      : null;
     if (activeRequest) {
-      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
+      return redirect(
+        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`
+      );
     }
   }
   return null;
 };
 
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
-  const readyState = useReadyState({ requestId, protocol: 'webSocket' });
-  return readyState ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
+  const readyState = useReadyState({ requestId, protocol: "webSocket" });
+  return readyState ? (
+    <ConnectionCircle data-testid="WebSocketSpinner__Connected" />
+  ) : null;
 };
 
 const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
-  const readyState = useReadyState({ requestId, protocol: 'curl' });
-  return readyState ? <ConnectionCircle data-testid="EventStreamSpinner__Connected" /> : null;
+  const readyState = useReadyState({ requestId, protocol: "curl" });
+  return readyState ? (
+    <ConnectionCircle data-testid="EventStreamSpinner__Connected" />
+  ) : null;
 };
 
 export const Debug: FC = () => {
@@ -156,8 +172,8 @@ export const Debug: FC = () => {
     subEnvironments,
     baseEnvironment,
     collection,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const requestData = useRouteLoaderData('request/:requestId') as
+  } = useRouteLoaderData(":workspaceId") as WorkspaceLoaderData;
+  const requestData = useRouteLoaderData("request/:requestId") as
     | RequestLoaderData
     | GrpcRequestLoaderData
     | WebSocketRequestLoaderData
@@ -166,7 +182,7 @@ export const Debug: FC = () => {
   const requestFetcher = useFetcher();
 
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
-  const [pastedCurl, setPastedCurl] = useState('');
+  const [pastedCurl, setPastedCurl] = useState("");
 
   const { organizationId, projectId, workspaceId, requestId } = useParams() as {
     organizationId: string;
@@ -175,10 +191,10 @@ export const Debug: FC = () => {
     requestId: string;
   };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
-    grpcRequests.map(r => ({
+    grpcRequests.map((r) => ({
       requestId: r._id,
       ...INITIAL_GRPC_REQUEST_STATE,
-    })),
+    }))
   );
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
@@ -190,8 +206,8 @@ export const Debug: FC = () => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
-        if (isGrpcRequest(doc) && event === 'insert') {
-          setGrpcStates(grpcStates => [
+        if (isGrpcRequest(doc) && event === "insert") {
+          setGrpcStates((grpcStates) => [
             ...grpcStates,
             { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE },
           ]);
@@ -200,12 +216,12 @@ export const Debug: FC = () => {
     });
   }, []);
 
-  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  const { settings } = useRouteLoaderData("root") as RootLoaderData;
   const [runningRequests, setRunningRequests] = useState<
     Record<string, boolean>
   >({});
   const setLoading = (isLoading: boolean) => {
-    guard(requestId, 'No active request');
+    guard(requestId, "No active request");
     if (Boolean(runningRequests?.[requestId]) !== isLoading) {
       setRunningRequests({
         ...runningRequests,
@@ -214,76 +230,76 @@ export const Debug: FC = () => {
     }
   };
 
-  const grpcState = grpcStates.find(s => s.requestId === requestId);
+  const grpcState = grpcStates.find((s) => s.requestId === requestId);
   const setGrpcState = (newState: GrpcRequestState) =>
-    setGrpcStates(state =>
-      state.map(s => (s.requestId === requestId ? newState : s)),
+    setGrpcStates((state) =>
+      state.map((s) => (s.requestId === requestId ? newState : s))
     );
   const reloadRequests = (requestIds: string[]) => {
-    setGrpcStates(state =>
-      state.map(s =>
-        requestIds.includes(s.requestId) ? { ...s, methods: [] } : s,
-      ),
+    setGrpcStates((state) =>
+      state.map((s) =>
+        requestIds.includes(s.requestId) ? { ...s, methods: [] } : s
+      )
     );
   };
   useEffect(
     () =>
-      window.main.on('grpc.start', (_, id) => {
-        setGrpcStates(state =>
-          state.map(s => (s.requestId === id ? { ...s, running: true } : s)),
+      window.main.on("grpc.start", (_, id) => {
+        setGrpcStates((state) =>
+          state.map((s) => (s.requestId === id ? { ...s, running: true } : s))
         );
       }),
-    [],
+    []
   );
   useEffect(
     () =>
-      window.main.on('grpc.end', (_, id) => {
-        setGrpcStates(state =>
-          state.map(s => (s.requestId === id ? { ...s, running: false } : s)),
+      window.main.on("grpc.end", (_, id) => {
+        setGrpcStates((state) =>
+          state.map((s) => (s.requestId === id ? { ...s, running: false } : s))
         );
       }),
-    [],
+    []
   );
   useEffect(
     () =>
-      window.main.on('grpc.data', (_, id, value) => {
-        setGrpcStates(state =>
-          state.map(s =>
+      window.main.on("grpc.data", (_, id, value) => {
+        setGrpcStates((state) =>
+          state.map((s) =>
             s.requestId === id
               ? {
-                ...s,
-                responseMessages: [
-                  ...s.responseMessages,
-                  {
-                    id: generateId(),
-                    text: JSON.stringify(value),
-                    created: Date.now(),
-                  },
-                ],
-              }
-              : s,
-          ),
+                  ...s,
+                  responseMessages: [
+                    ...s.responseMessages,
+                    {
+                      id: generateId(),
+                      text: JSON.stringify(value),
+                      created: Date.now(),
+                    },
+                  ],
+                }
+              : s
+          )
         );
       }),
-    [],
+    []
   );
   useEffect(
     () =>
-      window.main.on('grpc.error', (_, id, error) => {
-        setGrpcStates(state =>
-          state.map(s => (s.requestId === id ? { ...s, error } : s)),
+      window.main.on("grpc.error", (_, id, error) => {
+        setGrpcStates((state) =>
+          state.map((s) => (s.requestId === id ? { ...s, error } : s))
         );
       }),
-    [],
+    []
   );
   useEffect(
     () =>
-      window.main.on('grpc.status', (_, id, status) => {
-        setGrpcStates(state =>
-          state.map(s => (s.requestId === id ? { ...s, status } : s)),
+      window.main.on("grpc.status", (_, id, status) => {
+        setGrpcStates((state) =>
+          state.map((s) => (s.requestId === id ? { ...s, status } : s))
         );
       }),
-    [],
+    []
   );
 
   useDocBodyKeyboardShortcuts({
@@ -303,7 +319,7 @@ export const Debug: FC = () => {
     request_showDelete: () => {
       if (activeRequest) {
         showModal(AskModal, {
-          title: 'Delete Request?',
+          title: "Delete Request?",
           message: `Really delete ${activeRequest.name}?`,
           onDone: async (confirmed: boolean) => {
             if (confirmed) {
@@ -311,8 +327,8 @@ export const Debug: FC = () => {
                 { id: requestId },
                 {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
-                  method: 'post',
-                },
+                  method: "post",
+                }
               );
             }
           },
@@ -322,19 +338,19 @@ export const Debug: FC = () => {
     request_showDuplicate: () => {
       if (activeRequest) {
         showModal(PromptModal, {
-          title: 'Duplicate Request',
+          title: "Duplicate Request",
           defaultValue: activeRequest.name,
-          submitName: 'Create',
-          label: 'New Name',
+          submitName: "Create",
+          label: "New Name",
           selectText: true,
           onComplete: async (name: string) => {
             requestFetcher.submit(
               { name },
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/duplicate`,
-                method: 'post',
-                encType: 'application/json',
-              },
+                method: "post",
+                encType: "application/json",
+              }
             );
           },
         });
@@ -345,35 +361,35 @@ export const Debug: FC = () => {
         ? activeRequest.parentId
         : activeWorkspace._id;
       requestFetcher.submit(
-        { requestType: 'HTTP', parentId },
+        { requestType: "HTTP", parentId },
         {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-          method: 'post',
-          encType: 'application/json',
-        },
+          method: "post",
+          encType: "application/json",
+        }
       );
     },
     request_showCreateFolder: () => {
       const parentId = activeRequest ? activeRequest.parentId : workspaceId;
       showPrompt({
-        title: 'New Folder',
-        defaultValue: 'My Folder',
-        submitName: 'Create',
-        label: 'Name',
+        title: "New Folder",
+        defaultValue: "My Folder",
+        submitName: "Create",
+        label: "Name",
         selectText: true,
-        onComplete: name =>
+        onComplete: (name) =>
           requestFetcher.submit(
             { parentId, name },
             {
               action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-              method: 'post',
-            },
+              method: "post",
+            }
           ),
       });
     },
     // TODO: fix these
-    request_showRecent: () => { },
-    request_quickSwitch: () => { },
+    request_showRecent: () => {},
+    request_quickSwitch: () => {},
     environment_showEditor: () => setEnvironmentModalOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor: () => {
@@ -396,16 +412,24 @@ export const Debug: FC = () => {
   const setActiveEnvironmentFetcher = useFetcher();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
+  const sortOrder =
+    (searchParams.get("sortOrder") as SortOrder) || "type-manual";
   const { hotKeyRegistry } = settings;
 
-  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Partial<Request> }) =>
-    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }),
-      {
-        encType: 'application/json',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-        method: 'post',
-      });
+  const createRequest = ({
+    requestType,
+    parentId,
+    req,
+  }: {
+    requestType: CreateRequestType;
+    parentId: string;
+    req?: Partial<Request>;
+  }) =>
+    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }), {
+      encType: "application/json",
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+      method: "post",
+    });
 
   const groupMetaPatcher = useRequestGroupMetaPatcher();
   const reorderFetcher = useFetcher();
@@ -413,33 +437,40 @@ export const Debug: FC = () => {
   const navigate = useNavigate();
 
   const collectionDragAndDrop = useDragAndDrop({
-    getItems: keys =>
-      [...keys].map(key => ({ 'text/plain': key.toString() })),
+    getItems: (keys) =>
+      [...keys].map((key) => ({ "text/plain": key.toString() })),
     onReorder(event) {
-      const id = event.keys.values().next().value.toString();
+      const draggedKey = event.keys.values().next().value;
+      if (draggedKey === undefined) {
+        return;
+      }
+      const id = draggedKey.toString();
       const targetId = event.target.key.toString();
 
-      const dropItem = collection.find(r => r.doc._id === id);
-      const targetItem = collection.find(r => r.doc._id === targetId);
+      const dropItem = collection.find((r) => r.doc._id === id);
+      const targetItem = collection.find((r) => r.doc._id === targetId);
 
       if (!dropItem || !targetItem) {
         return;
       }
 
       // If the item we move is a folder we cannot move it inside it's ancestor folders so we must check the ancestry
-      const isMovingFolderInsideItsChildren = isRequestGroup(dropItem.doc) && targetItem.ancestors?.includes(dropItem.doc._id);
+      const isMovingFolderInsideItsChildren =
+        isRequestGroup(dropItem.doc) &&
+        targetItem.ancestors?.includes(dropItem.doc._id);
       if (isMovingFolderInsideItsChildren) {
         return;
       }
 
       let metaSortKey = 0;
       // If the target is a folder and we insert after it we want to add that item to the folder
-      const isMovingItemInsideFolder = isRequestGroup(targetItem.doc) && event.target.dropPosition === 'after';
+      const isMovingItemInsideFolder =
+        isRequestGroup(targetItem.doc) && event.target.dropPosition === "after";
       if (isMovingItemInsideFolder) {
         // there is no item before we move the item to the beginning
         // If there are children find the first child key and use a lower one
         // otherwise use whatever
-        const children = collection.filter(r => r.doc.parentId === targetId);
+        const children = collection.filter((r) => r.doc.parentId === targetId);
 
         if (children.length > 0) {
           const firstChild = children[0];
@@ -456,23 +487,32 @@ export const Debug: FC = () => {
         }
       } else {
         // Everything is going to be moving the item besides the other items
-        const targetSiblingsCollections = collection.filter(r => r.doc.parentId === targetItem.doc.parentId);
-        const targetIndexInSiblingsCollection = targetSiblingsCollections.findIndex(r => r.doc._id === targetId);
-        if (event.target.dropPosition === 'after') {
+        const targetSiblingsCollections = collection.filter(
+          (r) => r.doc.parentId === targetItem.doc.parentId
+        );
+        const targetIndexInSiblingsCollection =
+          targetSiblingsCollections.findIndex((r) => r.doc._id === targetId);
+        if (event.target.dropPosition === "after") {
           const beforeItem = targetItem;
-          const afterItem = targetSiblingsCollections[targetIndexInSiblingsCollection + 1];
+          const afterItem =
+            targetSiblingsCollections[targetIndexInSiblingsCollection + 1];
 
           if (beforeItem && afterItem) {
-            metaSortKey = beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2;
+            metaSortKey =
+              beforeItem.doc.metaSortKey -
+              (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2;
           } else {
             metaSortKey = beforeItem.doc.metaSortKey + 100;
           }
         } else {
-          const beforeItem = targetSiblingsCollections[targetIndexInSiblingsCollection - 1];
+          const beforeItem =
+            targetSiblingsCollections[targetIndexInSiblingsCollection - 1];
           const afterItem = targetItem;
 
           if (beforeItem && afterItem) {
-            metaSortKey = afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2;
+            metaSortKey =
+              afterItem.doc.metaSortKey -
+              (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2;
           } else {
             metaSortKey = afterItem.doc.metaSortKey - 100;
           }
@@ -489,32 +529,38 @@ export const Debug: FC = () => {
           },
           {
             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/reorder`,
-            method: 'POST',
-            encType: 'application/json',
+            method: "POST",
+            encType: "application/json",
           }
         );
       }
     },
     renderDropIndicator(target) {
-      if (target.type === 'item') {
-        const item = virtualizer.getVirtualItems().find(i => i.key === target.key);
+      if (target.type === "item") {
+        const item = virtualizer
+          .getVirtualItems()
+          .find((i) => i.key === target.key);
         if (item) {
           return (
             <DropIndicator
               target={target}
               className="absolute w-full z-10 outline-[--color-surprise] left-0 top-0 outline-1 outline"
               style={{
-                transform: `translateY(${target.dropPosition === 'before' ? item?.start : item.end}px)`,
+                transform: `translateY(${
+                  target.dropPosition === "before" ? item?.start : item.end
+                }px)`,
               }}
             />
           );
         }
       }
 
-      return <DropIndicator
-        target={target}
-        className="absolute outline-[--color-surprise] left-0 top-0 outline-1 outline"
-      />;
+      return (
+        <DropIndicator
+          target={target}
+          className="absolute outline-[--color-surprise] left-0 top-0 outline-1 outline"
+        />
+      );
     },
   });
 
@@ -525,93 +571,93 @@ export const Debug: FC = () => {
     hint?: PlatformKeyCombinations;
     action: () => void;
   }[] = [
-      {
-        id: 'HTTP',
-        name: 'HTTP Request',
-        icon: 'plus-circle',
-        hint: hotKeyRegistry.request_createHTTP,
-        action: () =>
-          createRequest({
-            requestType: 'HTTP',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'Event Stream',
-        name: 'Event Stream Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'Event Stream',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'GraphQL Request',
-        name: 'GraphQL Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'GraphQL',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'gRPC Request',
-        name: 'gRPC Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'gRPC',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'WebSocket Request',
-        name: 'WebSocket Request',
-        icon: 'plus-circle',
-        action: () =>
-          createRequest({
-            requestType: 'WebSocket',
-            parentId: workspaceId,
-          }),
-      },
-      {
-        id: 'From Curl',
-        name: 'From Curl',
-        icon: 'terminal',
-        action: () => setPasteCurlModalOpen(true),
-      },
-      {
-        id: 'New Folder',
-        name: 'New Folder',
-        icon: 'folder',
-        action: () =>
-          showPrompt({
-            title: 'New Folder',
-            defaultValue: 'My Folder',
-            submitName: 'Create',
-            label: 'Name',
-            selectText: true,
-            onComplete: name =>
-              requestFetcher.submit(
-                { parentId: workspaceId, name },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                  method: 'post',
-                }
-              ),
-          }),
-      },
-    ];
+    {
+      id: "HTTP",
+      name: "HTTP Request",
+      icon: "plus-circle",
+      hint: hotKeyRegistry.request_createHTTP,
+      action: () =>
+        createRequest({
+          requestType: "HTTP",
+          parentId: workspaceId,
+        }),
+    },
+    {
+      id: "Event Stream",
+      name: "Event Stream Request",
+      icon: "plus-circle",
+      action: () =>
+        createRequest({
+          requestType: "Event Stream",
+          parentId: workspaceId,
+        }),
+    },
+    {
+      id: "GraphQL Request",
+      name: "GraphQL Request",
+      icon: "plus-circle",
+      action: () =>
+        createRequest({
+          requestType: "GraphQL",
+          parentId: workspaceId,
+        }),
+    },
+    {
+      id: "gRPC Request",
+      name: "gRPC Request",
+      icon: "plus-circle",
+      action: () =>
+        createRequest({
+          requestType: "gRPC",
+          parentId: workspaceId,
+        }),
+    },
+    {
+      id: "WebSocket Request",
+      name: "WebSocket Request",
+      icon: "plus-circle",
+      action: () =>
+        createRequest({
+          requestType: "WebSocket",
+          parentId: workspaceId,
+        }),
+    },
+    {
+      id: "From Curl",
+      name: "From Curl",
+      icon: "terminal",
+      action: () => setPasteCurlModalOpen(true),
+    },
+    {
+      id: "New Folder",
+      name: "New Folder",
+      icon: "folder",
+      action: () =>
+        showPrompt({
+          title: "New Folder",
+          defaultValue: "My Folder",
+          submitName: "Create",
+          label: "Name",
+          selectText: true,
+          onComplete: (name) =>
+            requestFetcher.submit(
+              { parentId: workspaceId, name },
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                method: "post",
+              }
+            ),
+        }),
+    },
+  ];
 
-  const environmentsList = [baseEnvironment, ...subEnvironments].map(e => ({
+  const environmentsList = [baseEnvironment, ...subEnvironments].map((e) => ({
     id: e._id,
     name: e.name,
     color: e.color,
   }));
 
-  const visibleCollection = collection.filter(item => !item.hidden);
+  const visibleCollection = collection.filter((item) => !item.hidden);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer<HTMLDivElement | null, Child>({
@@ -619,7 +665,7 @@ export const Debug: FC = () => {
     count: visibleCollection.length,
     estimateSize: React.useCallback(() => 32, []),
     overscan: 30,
-    getItemKey: index => visibleCollection[index].doc._id,
+    getItemKey: (index) => visibleCollection[index].doc._id,
   });
 
   return (
@@ -631,13 +677,13 @@ export const Debug: FC = () => {
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"
-                onSelectionChange={environmentId => {
+                onSelectionChange={(environmentId) => {
                   setActiveEnvironmentFetcher.submit(
                     {
                       environmentId,
                     },
                     {
-                      method: 'POST',
+                      method: "POST",
                       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
                     }
                   );
@@ -667,7 +713,7 @@ export const Debug: FC = () => {
                           <Icon
                             icon="circle"
                             style={{
-                              color: selectedItem.color ?? 'var(--color-font)',
+                              color: selectedItem.color ?? "var(--color-font)",
                             }}
                           />
                           {selectedItem.name}
@@ -682,7 +728,7 @@ export const Debug: FC = () => {
                     key={activeEnvironment._id}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
-                    {item => (
+                    {(item) => (
                       <Item
                         id={item._id}
                         key={item._id}
@@ -696,16 +742,16 @@ export const Debug: FC = () => {
                             <Icon
                               icon={
                                 item._id === baseEnvironment._id
-                                  ? 'cancel'
-                                  : 'circle'
+                                  ? "cancel"
+                                  : "circle"
                               }
                               style={{
-                                color: item.color ?? 'var(--color-font)',
+                                color: item.color ?? "var(--color-font)",
                               }}
                             />
                             <span>
                               {item._id === baseEnvironment._id
-                                ? 'No Environment'
+                                ? "No Environment"
                                 : item.name}
                             </span>
                             {isSelected && (
@@ -722,7 +768,7 @@ export const Debug: FC = () => {
                 </Popover>
               </Select>
               <Button
-                aria-label='Manage Environments'
+                aria-label="Manage Environments"
                 onPress={() => setEnvironmentModalOpen(true)}
                 className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
               >
@@ -734,7 +780,7 @@ export const Debug: FC = () => {
               className="px-4 py-1 flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
               <Icon icon="cookie-bite" />
-              {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies
+              {activeCookieJar.cookies.length === 0 ? "Add" : "Manage"} Cookies
             </Button>
           </div>
 
@@ -743,8 +789,8 @@ export const Debug: FC = () => {
               <SearchField
                 aria-label="Request filter"
                 className="group relative flex-1"
-                defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                onChange={filter => {
+                defaultValue={searchParams.get("filter")?.toString() ?? ""}
+                onChange={(filter) => {
                   setSearchParams({
                     ...Object.fromEntries(searchParams.entries()),
                     filter,
@@ -765,13 +811,14 @@ export const Debug: FC = () => {
                 aria-label="Sort order"
                 className="h-full aspect-square"
                 selectedKey={sortOrder}
-                onSelectionChange={order =>
+                onSelectionChange={(order) => {
+                  if (order == null) return;
                   setSearchParams({
                     ...Object.fromEntries(searchParams.entries()),
                     sortOrder: order.toString(),
-                  })
-                }
-                items={SORT_ORDERS.map(order => {
+                  });
+                }}
+                items={SORT_ORDERS.map((order) => {
                   return {
                     id: order,
                     name: sortOrderName[order],
@@ -785,8 +832,11 @@ export const Debug: FC = () => {
                   <Icon icon="sort" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox<{ id: string; name: string }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
-                    {item => (
+                  <ListBox<{
+                    id: string;
+                    name: string;
+                  }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                    {(item) => (
                       <Item
                         id={item.id}
                         key={item.id}
@@ -823,8 +873,10 @@ export const Debug: FC = () => {
                   <Menu
                     aria-label="Create a new request"
                     selectionMode="single"
-                    onAction={key => {
-                      const item = createInCollectionActionList.find(item => item.id === key);
+                    onAction={(key) => {
+                      const item = createInCollectionActionList.find(
+                        (item) => item.id === key
+                      );
                       if (item) {
                         item.action();
                       }
@@ -832,7 +884,7 @@ export const Debug: FC = () => {
                     items={createInCollectionActionList}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
-                    {item => (
+                    {(item) => (
                       <Item
                         key={item.id}
                         id={item.id}
@@ -850,13 +902,13 @@ export const Debug: FC = () => {
 
             <GridList
               className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
-              items={collection.filter(item => !item.hidden && item.pinned)}
+              items={collection.filter((item) => !item.hidden && item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
               selectedKeys={[requestId]}
               selectionMode="single"
-              onSelectionChange={keys => {
-                if (keys !== 'all') {
+              onSelectionChange={(keys) => {
+                if (keys !== "all") {
                   const value = keys.values().next().value;
                   navigate(
                     `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
@@ -864,19 +916,19 @@ export const Debug: FC = () => {
                 }
               }}
             >
-              {item => {
+              {(item) => {
                 return (
                   <Item
                     key={item.doc._id}
                     id={item.doc._id}
                     className="group outline-none select-none"
                   >
-                    <div
-                      className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                    >
+                    <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
-                        <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
+                        <span
+                          className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}
+                        >
                           {getMethodShortHand(item.doc)}
                         </span>
                       )}
@@ -890,10 +942,15 @@ export const Debug: FC = () => {
                           gRPC
                         </span>
                       )}
-                      <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
+                      <span className="truncate">
+                        {getRequestNameOrFallback(item.doc)}
+                      </span>
                       <span className="flex-1" />
                       {item.pinned && (
-                        <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
+                        <Icon
+                          className="text-[--font-size-sm]"
+                          icon="thumb-tack"
+                        />
                       )}
                       {!isRequestGroup(item.doc) && (
                         <RequestActionsDropdown
@@ -909,7 +966,7 @@ export const Debug: FC = () => {
               }}
             </GridList>
 
-            <div className='flex-1 overflow-y-auto' ref={parentRef}>
+            <div className="flex-1 overflow-y-auto" ref={parentRef}>
               <GridList
                 style={{ height: virtualizer.getTotalSize() }}
                 items={virtualizer.getVirtualItems()}
@@ -917,15 +974,23 @@ export const Debug: FC = () => {
                 aria-label="Request Collection"
                 disallowEmptySelection
                 key={sortOrder}
-                dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
+                dragAndDropHooks={
+                  sortOrder === "type-manual"
+                    ? collectionDragAndDrop.dragAndDropHooks
+                    : undefined
+                }
                 selectedKeys={[requestId]}
                 selectionMode="single"
-                onSelectionChange={keys => {
-                  if (keys !== 'all') {
-                    const value = keys.values().next().value;
+                onSelectionChange={(keys) => {
+                  if (keys !== "all") {
+                    const selectedKey = keys.values().next().value;
+                    if (selectedKey === undefined) {
+                      return;
+                    }
+                    const value = selectedKey.toString();
 
                     const item = collection.find(
-                      item => item.doc._id === value
+                      (item) => item.doc._id === value
                     );
                     if (item && isRequestGroup(item.doc)) {
                       groupMetaPatcher(value, { collapsed: !item.collapsed });
@@ -937,7 +1002,7 @@ export const Debug: FC = () => {
                   }
                 }}
               >
-                {virtualItem => {
+                {(virtualItem) => {
                   const item = visibleCollection[virtualItem.index];
                   return (
                     <Item
@@ -957,7 +1022,9 @@ export const Debug: FC = () => {
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                         <Button slot="drag" className="hidden" />
                         {isRequest(item.doc) && (
-                          <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
+                          <span
+                            className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}
+                          >
                             {getMethodShortHand(item.doc)}
                           </span>
                         )}
@@ -974,15 +1041,24 @@ export const Debug: FC = () => {
                         {isRequestGroup(item.doc) && (
                           <Icon
                             className="w-6"
-                            icon={item.collapsed ? 'folder' : 'folder-open'}
+                            icon={item.collapsed ? "folder" : "folder-open"}
                           />
                         )}
-                        <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
+                        <span className="truncate">
+                          {getRequestNameOrFallback(item.doc)}
+                        </span>
                         <span className="flex-1" />
-                        {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-                        {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
+                        {isWebSocketRequest(item.doc) && (
+                          <WebSocketSpinner requestId={item.doc._id} />
+                        )}
+                        {isEventStreamRequest(item.doc) && (
+                          <EventStreamSpinner requestId={item.doc._id} />
+                        )}
                         {item.pinned && (
-                          <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
+                          <Icon
+                            className="text-[--font-size-sm]"
+                            icon="thumb-tack"
+                          />
                         )}
                         {isRequestGroup(item.doc) ? (
                           <RequestGroupActionsDropdown
@@ -1006,7 +1082,6 @@ export const Debug: FC = () => {
 
           <WorkspaceSyncDropdown />
 
-
           {isEnvironmentModalOpen && (
             <WorkspaceEnvironmentsEditModal
               onHide={() => setEnvironmentModalOpen(false)}
@@ -1017,9 +1092,9 @@ export const Debug: FC = () => {
           )}
           {isPasteCurlModalOpen && (
             <PasteCurlModal
-              onImport={req => {
+              onImport={(req) => {
                 createRequest({
-                  requestType: 'From Curl',
+                  requestType: "From Curl",
                   parentId: workspaceId,
                   req,
                 });
@@ -1045,10 +1120,10 @@ export const Debug: FC = () => {
             )}
             {isRequestId(requestId) && (
               <RequestPane
-                environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                environmentId={activeEnvironment ? activeEnvironment._id : ""}
                 settings={settings}
                 setLoading={setLoading}
-                onPaste={text => {
+                onPaste={(text) => {
                   setPastedCurl(text);
                   setPasteCurlModalOpen(true);
                 }}

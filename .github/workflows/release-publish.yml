@@ -24,15 +24,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
 
       - name: Install packages
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2

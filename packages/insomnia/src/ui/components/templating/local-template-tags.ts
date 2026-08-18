@@ -708,13 +708,16 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
           } else {
             const DOMParser = (await import('@xmldom/xmldom')).DOMParser;
-            const dom = new DOMParser().parseFromString(body);
+            const dom = new DOMParser().parseFromString(body, 'text/xml');
             let selectedValues: SelectedValue[] = [];
             if (sanitizedFilter === undefined) {
               throw new Error('Must pass an XPath query.');
             }
             try {
-              selectedValues = (await import('xpath')).select(sanitizedFilter, dom);
+              selectedValues = (await import('xpath')).select(
+                sanitizedFilter,
+                dom as unknown as Node,
+              );
             } catch (err) {
               throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
             }

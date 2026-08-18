@@ -24,7 +24,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
     info: null,
   };
 
-  // eslint-disable-next-line camelcase
+
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
     const { error, info } = this.state;
     const invalidationKeyChanged = nextProps.invalidationKey !== this.props.invalidationKey;

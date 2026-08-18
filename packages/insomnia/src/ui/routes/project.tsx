@@ -1,5 +1,5 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Fragment, useState } from 'react';
+import { IconName } from "@fortawesome/fontawesome-svg-core";
+import React, { FC, Fragment, useState } from "react";
 import {
   Button,
   GridList,
@@ -13,7 +13,7 @@ import {
   SearchField,
   Select,
   SelectValue,
-} from 'react-aria-components';
+} from "react-aria-components";
 import {
   LoaderFunction,
   matchPath,
@@ -23,47 +23,47 @@ import {
   useNavigate,
   useParams,
   useSearchParams,
-} from 'react-router-dom';
+} from "react-router-dom";
 
-import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
+import { parseApiSpec, ParsedApiSpec } from "../../common/api-specs";
 import {
   DASHBOARD_SORT_ORDERS,
   DashboardSortOrder,
   dashboardSortOrderName,
   getProductName,
-} from '../../common/constants';
-import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
-import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import { strings } from '../../common/strings';
-import * as models from '../../models';
-import { ApiSpec } from '../../models/api-spec';
-import { CaCertificate } from '../../models/ca-certificate';
-import { ClientCertificate } from '../../models/client-certificate';
-import { sortProjects } from '../../models/helpers/project';
+} from "../../common/constants";
+import { fuzzyMatchAll, isNotNullOrUndefined } from "../../common/misc";
+import { descendingNumberSort, sortMethodMap } from "../../common/sorting";
+import { strings } from "../../common/strings";
+import * as models from "../../models";
+import { ApiSpec } from "../../models/api-spec";
+import { CaCertificate } from "../../models/ca-certificate";
+import { ClientCertificate } from "../../models/client-certificate";
+import { sortProjects } from "../../models/helpers/project";
 import {
   DEFAULT_ORGANIZATION_ID,
   defaultOrganization,
   Organization,
-} from '../../models/organization';
+} from "../../models/organization";
 import {
   DEFAULT_PROJECT_ID,
   isRemoteProject,
   Project,
-} from '../../models/project';
-import { isDesign, Workspace } from '../../models/workspace';
-import { WorkspaceMeta } from '../../models/workspace-meta';
-import { guard } from '../../utils/guard';
-import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
+} from "../../models/project";
+import { isDesign, Workspace } from "../../models/workspace";
+import { WorkspaceMeta } from "../../models/workspace-meta";
+import { guard } from "../../utils/guard";
+import { ProjectDropdown } from "../components/dropdowns/project-dropdown";
 
-import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
-import { ErrorBoundary } from '../components/error-boundary';
-import { Icon } from '../components/icon';
-import { showAlert, showPrompt } from '../components/modals';
-import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
-import { ImportModal } from '../components/modals/import-modal';
-import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
-import { SidebarLayout } from '../components/sidebar-layout';
-import { TimeFromNow } from '../components/time-from-now';
+import { WorkspaceCardDropdown } from "../components/dropdowns/workspace-card-dropdown";
+import { ErrorBoundary } from "../components/error-boundary";
+import { Icon } from "../components/icon";
+import { showAlert, showPrompt } from "../components/modals";
+import { GitRepositoryCloneModal } from "../components/modals/git-repository-settings-modal/git-repo-clone-modal";
+import { ImportModal } from "../components/modals/import-modal";
+import { EmptyStatePane } from "../components/panes/project-empty-state-pane";
+import { SidebarLayout } from "../components/sidebar-layout";
+import { TimeFromNow } from "../components/time-from-now";
 
 export interface WorkspaceWithMetadata {
   _id: string;
@@ -75,7 +75,7 @@ export interface WorkspaceWithMetadata {
   lastCommitAuthor: string | null | undefined;
   lastActiveBranch: string | null | undefined;
   spec: Record<string, any> | null;
-  specFormat: 'openapi' | 'swagger' | null;
+  specFormat: "openapi" | "swagger" | null;
   name: string;
   apiSpec: ApiSpec | null;
   specFormatVersion: string | null;
@@ -87,7 +87,7 @@ export interface WorkspaceWithMetadata {
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
-  guard(organizationId, 'Organization ID is required');
+  guard(organizationId, "Organization ID is required");
 
   const prevOrganizationLocation = localStorage.getItem(
     `locationHistoryEntry:${organizationId}`
@@ -96,7 +96,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   if (prevOrganizationLocation) {
     const match = matchPath(
       {
-        path: '/organization/:organizationId/project/:projectId',
+        path: "/organization/:organizationId/project/:projectId",
         end: false,
       },
       prevOrganizationLocation
@@ -111,7 +111,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
   if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
     const localProjects = (await models.project.all()).filter(
-      proj => !isRemoteProject(proj)
+      (proj) => !isRemoteProject(proj)
     );
     if (localProjects[0]._id) {
       return redirect(
@@ -143,12 +143,12 @@ export const loader: LoaderFunction = async ({
 }): Promise<ProjectLoaderData> => {
   const search = new URL(request.url).searchParams;
   const { projectId, organizationId } = params;
-  guard(organizationId, 'Organization ID is required');
-  guard(projectId, 'projectId parameter is required');
-  const sortOrder = search.get('sortOrder') || 'modified-desc';
-  const filter = search.get('filter') || '';
-  const scope = search.get('scope') || 'all';
-  const projectName = search.get('projectName') || '';
+  guard(organizationId, "Organization ID is required");
+  guard(projectId, "projectId parameter is required");
+  const sortOrder = search.get("sortOrder") || "modified-desc";
+  const filter = search.get("filter") || "";
+  const scope = search.get("scope") || "all";
+  const projectName = search.get("projectName") || "";
 
   let project = await models.project.getById(projectId);
   if (!project) {
@@ -161,7 +161,7 @@ export const loader: LoaderFunction = async ({
         remoteId: null,
       }));
   }
-  guard(project, 'Project was not found');
+  guard(project, "Project was not found");
 
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
 
@@ -170,9 +170,9 @@ export const loader: LoaderFunction = async ({
   ): Promise<WorkspaceWithMetadata> => {
     const apiSpec = await models.apiSpec.getByParentId(workspace._id);
 
-    let spec: ParsedApiSpec['contents'] = null;
-    let specFormat: ParsedApiSpec['format'] = null;
-    let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
+    let spec: ParsedApiSpec["contents"] = null;
+    let specFormat: ParsedApiSpec["format"] = null;
+    let specFormatVersion: ParsedApiSpec["formatVersion"] = null;
     if (apiSpec) {
       try {
         const result = parseApiSpec(apiSpec.contents);
@@ -187,7 +187,7 @@ export const loader: LoaderFunction = async ({
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
       workspace._id
     );
-    guard(workspaceMeta, 'WorkspaceMeta was not found');
+    guard(workspaceMeta, "WorkspaceMeta was not found");
     const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
 
     const lastCommitAuthor = workspaceMeta?.cachedGitLastAuthor;
@@ -248,9 +248,9 @@ export const loader: LoaderFunction = async ({
   );
 
   const workspaces = workspacesWithMetaData
-    .filter(w => (scope !== 'all' ? w.workspace.scope === scope : true))
+    .filter((w) => (scope !== "all" ? w.workspace.scope === scope : true))
     // @TODO - Figure out if the database has a way to sort/filter items that could replace this logic.
-    .filter(workspace =>
+    .filter((workspace) =>
       filter
         ? Boolean(
             fuzzyMatchAll(
@@ -258,11 +258,11 @@ export const loader: LoaderFunction = async ({
               // Use the filter string to match against these properties
               [
                 workspace.name,
-                workspace.workspace.scope === 'design'
-                  ? 'document'
-                  : 'collection',
-                workspace.lastActiveBranch || '',
-                workspace.specFormatVersion || '',
+                workspace.workspace.scope === "design"
+                  ? "document"
+                  : "collection",
+                workspace.lastActiveBranch || "",
+                workspace.specFormatVersion || "",
               ],
               { splitSpace: true, loose: true }
             )?.indexes
@@ -275,10 +275,10 @@ export const loader: LoaderFunction = async ({
 
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
-      ? allProjects.filter(proj => !isRemoteProject(proj))
+      ? allProjects.filter((proj) => !isRemoteProject(proj))
       : [project];
 
-  const projects = sortProjects(organizationProjects).filter(p =>
+  const projects = sortProjects(organizationProjects).filter((p) =>
     p.name.toLowerCase().includes(projectName.toLowerCase())
   );
 
@@ -296,10 +296,10 @@ export const loader: LoaderFunction = async ({
     activeProject: project,
     allFilesCount: workspacesWithMetaData.length,
     documentsCount: workspacesWithMetaData.filter(
-      w => w.workspace.scope === 'design'
+      (w) => w.workspace.scope === "design"
     ).length,
     collectionsCount: workspacesWithMetaData.filter(
-      w => w.workspace.scope === 'collection'
+      (w) => w.workspace.scope === "collection"
     ).length,
   };
 };
@@ -329,28 +329,28 @@ const ProjectRoute: FC = () => {
 
   const fetcher = useFetcher();
   const navigate = useNavigate();
-  const filter = searchParams.get('filter') || '';
+  const filter = searchParams.get("filter") || "";
   const sortOrder =
-    (searchParams.get('sortOrder') as DashboardSortOrder) || 'modified-desc';
+    (searchParams.get("sortOrder") as DashboardSortOrder) || "modified-desc";
   const [importModalType, setImportModalType] = useState<
-    'uri' | 'file' | 'clipboard' | null
+    "uri" | "file" | "clipboard" | null
   >(null);
   const createNewCollection = () => {
     showPrompt({
-      title: 'Create New Request Collection',
-      submitName: 'Create',
-      placeholder: 'My Collection',
-      defaultValue: 'My Collection',
+      title: "Create New Request Collection",
+      submitName: "Create",
+      placeholder: "My Collection",
+      defaultValue: "My Collection",
       selectText: true,
       onComplete: async (name: string) => {
         fetcher.submit(
           {
             name,
-            scope: 'collection',
+            scope: "collection",
           },
           {
             action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
+            method: "post",
           }
         );
       },
@@ -359,20 +359,20 @@ const ProjectRoute: FC = () => {
 
   const createNewDocument = () => {
     showPrompt({
-      title: 'Create New Design Document',
-      submitName: 'Create',
-      placeholder: 'my-spec.yaml',
-      defaultValue: 'my-spec.yaml',
+      title: "Create New Design Document",
+      submitName: "Create",
+      placeholder: "my-spec.yaml",
+      defaultValue: "my-spec.yaml",
       selectText: true,
       onComplete: async (name: string) => {
         fetcher.submit(
           {
             name,
-            scope: 'design',
+            scope: "design",
           },
           {
             action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
+            method: "post",
           }
         );
       },
@@ -392,29 +392,29 @@ const ProjectRoute: FC = () => {
     action: () => void;
   }[] = [
     {
-      id: 'new-collection',
-      name: 'Request collection',
-      icon: 'bars',
+      id: "new-collection",
+      name: "Request collection",
+      icon: "bars",
       action: createNewCollection,
     },
     {
-      id: 'new-document',
-      name: 'Design document',
-      icon: 'file',
+      id: "new-document",
+      name: "Design document",
+      icon: "file",
       action: createNewDocument,
     },
     {
-      id: 'import',
-      name: 'Import',
-      icon: 'file-import',
+      id: "import",
+      name: "Import",
+      icon: "file-import",
       action: () => {
-        setImportModalType('file');
+        setImportModalType("file");
       },
     },
     {
-      id: 'git-clone',
-      name: 'Git Clone',
-      icon: 'code-fork',
+      id: "git-clone",
+      name: "Git Clone",
+      icon: "code-fork",
       action: importFromGit,
     },
   ];
@@ -431,30 +431,30 @@ const ProjectRoute: FC = () => {
     };
   }[] = [
     {
-      id: 'all',
+      id: "all",
       label: `All files (${allFilesCount})`,
-      icon: 'folder',
+      icon: "folder",
       level: 0,
     },
     {
-      id: 'design',
+      id: "design",
       label: `Documents (${documentsCount})`,
       level: 1,
-      icon: 'file',
+      icon: "file",
       action: {
-        icon: 'plus',
-        label: 'New design document',
+        icon: "plus",
+        label: "New design document",
         run: createNewDocument,
       },
     },
     {
-      id: 'collection',
+      id: "collection",
       label: `Collections (${collectionsCount})`,
       level: 1,
-      icon: 'bars',
+      icon: "bars",
       action: {
-        icon: 'plus',
-        label: 'New request collection',
+        icon: "plus",
+        label: "New request collection",
         run: createNewCollection,
       },
     },
@@ -470,7 +470,7 @@ const ProjectRoute: FC = () => {
               <div className="p-[--padding-sm]">
                 <Select
                   aria-label="Organizations"
-                  onSelectionChange={id => {
+                  onSelectionChange={(id) => {
                     navigate(`/organization/${id}`);
                   }}
                   selectedKey={organizationId}
@@ -486,7 +486,7 @@ const ProjectRoute: FC = () => {
                   </Button>
                   <Popover className="min-w-max">
                     <ListBox<Organization> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
-                      {item => (
+                      {(item) => (
                         <Item
                           id={item._id}
                           key={item._id}
@@ -521,8 +521,10 @@ const ProjectRoute: FC = () => {
                     <SearchField
                       aria-label="Projects filter"
                       className="group relative flex-1"
-                      defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                      onChange={projectName => {
+                      defaultValue={
+                        searchParams.get("filter")?.toString() ?? ""
+                      }
+                      onChange={(projectName) => {
                         setSearchParams({
                           ...Object.fromEntries(searchParams.entries()),
                           projectName,
@@ -544,13 +546,14 @@ const ProjectRoute: FC = () => {
                       onPress={() => {
                         if (activeProject.remoteId) {
                           showAlert({
-                            title: 'This capability is coming soon',
-                            okLabel: 'Close',
+                            title: "This capability is coming soon",
+                            okLabel: "Close",
                             message: (
                               <div>
                                 <p>
-                                  At the moment it is not possible to create more
-                                  cloud projects within a team in Insomnium.
+                                  At the moment it is not possible to create
+                                  more cloud projects within a team in
+                                  Insomnium.
                                 </p>
                                 <p>🚀 This feature is coming soon!</p>
                               </div>
@@ -560,18 +563,18 @@ const ProjectRoute: FC = () => {
                           const defaultValue = `My ${strings.project.singular}`;
                           showPrompt({
                             title: `Create New ${strings.project.singular}`,
-                            submitName: 'Create',
+                            submitName: "Create",
                             placeholder: defaultValue,
                             defaultValue,
                             selectText: true,
-                            onComplete: async name =>
+                            onComplete: async (name) =>
                               createNewProjectFetcher.submit(
                                 {
                                   name,
                                 },
                                 {
                                   action: `/organization/${organizationId}/project/new`,
-                                  method: 'post',
+                                  method: "post",
                                 }
                               ),
                           });
@@ -592,8 +595,8 @@ const ProjectRoute: FC = () => {
                   disallowEmptySelection
                   selectedKeys={[activeProject._id]}
                   selectionMode="single"
-                  onSelectionChange={keys => {
-                    if (keys !== 'all') {
+                  onSelectionChange={(keys) => {
+                    if (keys !== "all") {
                       const value = keys.values().next().value;
                       navigate({
                         pathname: `/organization/${organizationId}/project/${value}`,
@@ -602,7 +605,7 @@ const ProjectRoute: FC = () => {
                     }
                   }}
                 >
-                  {item => {
+                  {(item) => {
                     return (
                       <Item
                         key={item._id}
@@ -614,12 +617,19 @@ const ProjectRoute: FC = () => {
                           <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                           <Icon
                             icon={
-                              isRemoteProject(item) ? 'globe-americas' : 'laptop'
+                              isRemoteProject(item)
+                                ? "globe-americas"
+                                : "laptop"
                             }
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
-                          {item._id !== DEFAULT_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
+                          {item._id !== DEFAULT_PROJECT_ID && (
+                            <ProjectDropdown
+                              organizationId={organizationId}
+                              project={item}
+                            />
+                          )}
                         </div>
                       </Item>
                     );
@@ -631,21 +641,24 @@ const ProjectRoute: FC = () => {
                 items={scopeActionList}
                 className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
                 disallowEmptySelection
-                selectedKeys={[searchParams.get('scope') || 'all']}
+                selectedKeys={[searchParams.get("scope") || "all"]}
                 selectionMode="single"
-                onSelectionChange={keys => {
-                  if (keys !== 'all') {
+                onSelectionChange={(keys) => {
+                  if (keys !== "all") {
                     const value = keys.values().next().value;
                     setSearchParams({
                       ...Object.fromEntries(searchParams.entries()),
-                      scope: value,
+                      scope: value === undefined ? "all" : String(value),
                     });
                   }
                 }}
               >
-                {item => {
+                {(item) => {
                   return (
-                    <Item textValue={item.label} className="group outline-none select-none">
+                    <Item
+                      textValue={item.label}
+                      className="group outline-none select-none"
+                    >
                       <div
                         className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         style={{
@@ -680,8 +693,8 @@ const ProjectRoute: FC = () => {
                 <SearchField
                   aria-label="Workspaces filter"
                   className="group relative flex-1"
-                  defaultValue={searchParams.get('filter')?.toString()}
-                  onChange={filter => {
+                  defaultValue={searchParams.get("filter")?.toString()}
+                  onChange={(filter) => {
                     setSearchParams({
                       ...Object.fromEntries(searchParams.entries()),
                       filter,
@@ -702,13 +715,14 @@ const ProjectRoute: FC = () => {
                   aria-label="Sort order"
                   className="h-full aspect-square"
                   selectedKey={sortOrder}
-                  onSelectionChange={order =>
+                  onSelectionChange={(order) => {
+                    if (order == null) return;
                     setSearchParams({
                       ...Object.fromEntries(searchParams.entries()),
                       sortOrder: order.toString(),
-                    })
-                  }
-                  items={DASHBOARD_SORT_ORDERS.map(order => {
+                    });
+                  }}
+                  items={DASHBOARD_SORT_ORDERS.map((order) => {
                     return {
                       id: order,
                       name: dashboardSortOrderName[order],
@@ -725,9 +739,8 @@ const ProjectRoute: FC = () => {
                     <ListBox<{
                       id: string;
                       name: string;
-                    }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                    >
-                      {item => (
+                    }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                      {(item) => (
                         <Item
                           id={item.id}
                           key={item.id}
@@ -764,9 +777,9 @@ const ProjectRoute: FC = () => {
                     <Menu
                       aria-label="Create in project actions"
                       selectionMode="single"
-                      onAction={key => {
+                      onAction={(key) => {
                         const item = createInProjectActionList.find(
-                          item => item.id === key
+                          (item) => item.id === key
                         );
                         if (item) {
                           item.action();
@@ -775,7 +788,7 @@ const ProjectRoute: FC = () => {
                       items={createInProjectActionList}
                       className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      {item => (
+                      {(item) => (
                         <Item
                           key={item.id}
                           id={item.id}
@@ -789,13 +802,12 @@ const ProjectRoute: FC = () => {
                     </Menu>
                   </Popover>
                 </MenuTrigger>
-
               </div>
 
               <GridList
                 aria-label="Workspaces"
                 items={workspaces}
-                onAction={key => {
+                onAction={(key) => {
                   navigate(
                     `/organization/${organizationId}/project/${projectId}/workspace/${key}/debug`
                   );
@@ -816,13 +828,13 @@ const ProjectRoute: FC = () => {
                     <EmptyStatePane
                       createRequestCollection={createNewCollection}
                       createDesignDocument={createNewDocument}
-                      importFrom={() => setImportModalType('file')}
+                      importFrom={() => setImportModalType("file")}
                       cloneFromGit={importFromGit}
                     />
                   );
                 }}
               >
-                {item => {
+                {(item) => {
                   return (
                     <Item
                       key={item._id}
@@ -843,8 +855,8 @@ const ProjectRoute: FC = () => {
                           )}
                           <span className="truncate pr-2">
                             {isDesign(item.workspace)
-                              ? 'Document'
-                              : 'Collection'}
+                              ? "Document"
+                              : "Collection"}
                           </span>
                         </div>
                         <span className="flex-1" />
@@ -858,9 +870,9 @@ const ProjectRoute: FC = () => {
                         {item.workspace.name}
                       </Heading>
                       <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
-                        {typeof item.spec?.info?.version === 'string' && (
+                        {typeof item.spec?.info?.version === "string" && (
                           <div className="flex-1 pt-2">
-                            {item.spec.info.version.startsWith('v') ? '' : 'v'}
+                            {item.spec.info.version.startsWith("v") ? "" : "v"}
                             {item.spec.info.version}
                           </div>
                         )}
@@ -868,9 +880,9 @@ const ProjectRoute: FC = () => {
                           <div className="text-sm flex items-center gap-2">
                             <Icon icon="file-alt" />
                             <span>
-                              {item.specFormat === 'openapi'
-                                ? 'OpenAPI'
-                                : 'Swagger'}{' '}
+                              {item.specFormat === "openapi"
+                                ? "OpenAPI"
+                                : "Swagger"}{" "}
                               {item.specFormatVersion}
                             </span>
                           </div>

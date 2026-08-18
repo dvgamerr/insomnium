@@ -1,7 +1,7 @@
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import type { RulesetDefinition } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
-// @ts-expect-error - This is a bundled file not sure why it's not found
+// @ts-ignore -- Runtime subpath export exists, but the package omits its declaration export.
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';

@@ -23,16 +23,16 @@ This project contains the smoke testing suite for Insomnium App.
 Prerequisites:
 
 - Clone the project
-- Run `npm install`
+- Run `bun install`
 
 To run all tests:
 
-- In one terminal run: `npm run watch:app`
-- In another terminal run: `npm run test:smoke:dev`
+- In one terminal run: `bun run watch:app`
+- In another terminal run: `bun run test:smoke:dev`
 
 To run single tests:
 
-- Filter by the file or test title, e.g. `npm run test:smoke:dev -- oauth`
+- Filter by the file or test title, e.g. `bun run test:smoke:dev -- oauth`
 
 ## Debugging and Developing Tests locally
 
@@ -41,7 +41,7 @@ To run single tests:
 In order to run/debug tests directly from VS Code:
 
 - Install the [Playwright extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
-- With the extension installed, run on terminal `npm run watch:app`.
+- With the extension installed, run on terminal `bun run watch:app`.
 
 You can trigger tests from the `Testing` tab, or within the test files clicking the run button.
 
@@ -53,7 +53,7 @@ If no tests appear, you may need to run "Refresh playwright tests". This can be 
 
 ### Playwright Inspector
 
-You can step through tests with playwright inspector: `PWDEBUG=1 npm run test:smoke:dev`
+You can step through tests with playwright inspector: `PWDEBUG=1 bun run test:smoke:dev`
 
 This is also useful to help create new tests.
 
@@ -69,7 +69,7 @@ To open a local trace viewer for a given test output, run:
 
 ```shell
 # Example:
-npx playwright show-trace packages/insomnia-smoke-test/traces/app-can-send-requests/trace.zip
+bunx playwright show-trace packages/insomnia-smoke-test/traces/app-can-send-requests/trace.zip
 ```
 
 Alternatively you can upload this trace to [trace.playwright.dev](https://trace.playwright.dev/).
@@ -78,9 +78,9 @@ Alternatively you can upload this trace to [trace.playwright.dev](https://trace.
 
 You can enable additional logging to help you debug tests:
 
-- Playwright logs: `DEBUG=pw:api npm run test:smoke:dev`
-- Insomnium console logs: `DEBUG=pw:browser npm run test:smoke:dev`
-- WebServer console logs: `DEBUG=pw:WebServer npm run test:smoke:dev`
+- Playwright logs: `DEBUG=pw:api bun run test:smoke:dev`
+- Insomnium console logs: `DEBUG=pw:browser bun run test:smoke:dev`
+- WebServer console logs: `DEBUG=pw:WebServer bun run test:smoke:dev`
 
 ## Reproducing CI Failures
 
@@ -103,20 +103,20 @@ For `build`:
 
 ```shell
 # Transpile js bundle
-npm run app-build
+bun run app-build
 
 # Run tests
-npm run test:smoke:build
+bun run test:smoke:build
 ```
 
 For `package`:
 
 ```shell
 # Build executable in /packages/insomnia/dist
-npm run app-package
+bun run app-package
 
 # Run tests
-npm run test:smoke:package
+bun run test:smoke:package
 ```
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
@@ -126,5 +126,5 @@ Each of the above commands will automatically run the Express server, so you do 
 Non recurring / non-CI tests, like pre-release ones, can be run using [Playwright VS Code extension](#playwright-vs-code-extension) or by running `test:dev` against the desired test file:
 
 ```shell
-npm run test:dev -w packages/insomnia-smoke-test -- preferences-interactions
+bun run test:dev -w packages/insomnia-smoke-test -- preferences-interactions
 ```

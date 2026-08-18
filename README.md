@@ -26,7 +26,7 @@ I have removed user login, tracking, analytics, etc, from Insomnia so it is now 
 
 Insomnium is available for Mac, Windows, Ubuntu, Debian, CentOS, Fedora and [can be downloaded here](https://github.com/ArchGPT/insomnium/releases). Insomnium is also [available on AUR for ArchLinux](https://aur.archlinux.org/packages/insomnium-bin). 
 
-Alternatively, you can build Insomnium from source on your local machine using `npm run app-package`.
+Alternatively, you can build Insomnium from source on your local machine using `bun run app-package`.
 
 
 ## Backstory
@@ -49,28 +49,28 @@ You can use the GUI (under `Preferences/Data`) or directly e.g. for linux `cp -r
 
 ## Develop Insomnium
 
-Development on Insomnium can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
+Development on Insomnium can be done on Mac, Windows, or Linux as long as you have [Bun](https://bun.sh/) and [Git](https://git-scm.com/). See `package.json` for the supported Bun version.
 
 <details>
 <summary>Initial Dev Setup</summary>
 
-This repository is structured as a monorepo and contains many Node.JS packages. Each package has its own set of commands, but the most common commands are available from the root [`package.json`](package.json) and can be accessed using the `npm run …` command. Here are the only three commands you should need to start developing on the app.
+This repository is structured as a monorepo and contains many JavaScript packages. Each package has its own set of commands, but the most common commands are available from the root [`package.json`](package.json) and can be accessed using the `bun run …` command. Here are the only three commands you should need to start developing on the app.
 
 ```shell
 # Install and Link Dependencies
-npm i
+bun install
 
 # Run Lint
-npm run lint
+bun run lint
 
 # Run type checking
-npm run type-check
+bun run type-check
 
 # Run Tests
-npm test
+bun test
 
 # Start App with Live Reload
-npm run dev
+bun run dev
 ```
 
 ### Linux

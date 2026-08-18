@@ -2,27 +2,27 @@
 
 ## install node version of libcurl
 
-npm install will download the electron version of libcurl but for inso we need the node version
+bun install will download the electron version of libcurl but for inso we need the node version
 
 ```shell
-node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+bun x node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
 ```
 
-to download the electron version of node-libcurl you should remove the module and npm install again
+to download the electron version of node-libcurl you should remove the module and bun install again
 
 ```shell
 rm -rf node_modules/@getinsomnia/
-npm install
+bun install
 ```
 
 ## Run CLI Smoke Tests
 
 ```shell
 # Package the Inso CLI binaries
-npm run inso-package
+bun run inso-package
 
 # Run CLI tests
-npm run test:smoke:cli
+bun run test:smoke:cli
 ```
 
 ## Debugging CLI tests using watcher
@@ -33,13 +33,13 @@ From project root, in separate terminals:
 
 ```sh
 # start smoke test api
-npm run serve -w packages/insomnia-smoke-test
+bun run serve -w packages/insomnia-smoke-test
 
 # build send-request
-npm run build:sr -w packages/insomnia
+bun run build:sr -w packages/insomnia
 
 # watch inso
-npm run start -w packages/insomnia-inso
+bun run start -w packages/insomnia-inso
 
 # run api test with dev bundle
 $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
@@ -49,7 +49,7 @@ $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packa
 
 ```sh
 # run modify package command and then a unit test
-npm run package -w packages/insomnia-inso && \
+bun run package -w packages/insomnia-inso && \
 $PWD/packages/insomnia-inso/binaries/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
 
 ```

@@ -30,7 +30,7 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 interface Props extends Omit<DropdownProps, 'children'> {
   activeEnvironment: Environment;
   activeProject: Project;
-  isPinned: Boolean;
+  isPinned: boolean;
   request: Request | GrpcRequest | WebSocketRequest;
   requestGroup?: RequestGroup;
 }

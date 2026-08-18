@@ -1,7 +1,7 @@
 // These types are adapted from the v2.3.5 types because module augmentation is not possible because they named a namespace (`CookieJar`) the same name as a namespace (`CookieJar`) which causes a circular dependency when you try to augment the CookieJar class to add some of the (missing) types we need.
 // If you're asking yourself whether we should upstream these changes the answer is "absolutely... not".  We need to just update to tough-cookie v4.
 
-/* eslint-disable -- eslint has a hard time with declaration files */
+
 
 declare module 'tough-cookie' {
 

@@ -1,4 +1,4 @@
-/* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
+
 import electron from 'electron';
 // to-do > "@seald-io/nedb": "^2.0.0",
 // import NeDB from '@seald-io/nedb';

@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 import { unlink, writeFileSync } from 'fs';
 import fs from 'fs';
 import Mocha, { type Reporter, type ReporterConstructor } from 'mocha';

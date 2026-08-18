@@ -1,4 +1,3 @@
-import childProcess from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import fs from 'fs';
 import { rm } from 'fs/promises';
@@ -10,10 +9,10 @@ import * as vite from 'vite';
 import buildMainAndPreload from '../esbuild.main';
 
 // Start build if ran from CLI
-if (require.main === module) {
+if (import.meta.main) {
   process.nextTick(async () => {
     try {
-      await module.exports.start();
+      await start();
     } catch (err) {
       console.log('[build] ERROR:', err);
       process.exit(1);
@@ -97,17 +96,7 @@ const buildLicenseList = (relSource: string, relDest: string) =>
 export const start = async () => {
   console.log('[build] Starting build');
 
-  console.log(
-    `[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim()
-  );
-  console.log(
-    `[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim()
-  );
-
-  if (process.version.indexOf('v18.') !== 0) {
-    console.log('[build] Node v18.x.x is required to build');
-    process.exit(1);
-  }
+  console.log(`[build] bun: ${Bun.version}`);
 
   const buildFolder = path.join('../build');
 

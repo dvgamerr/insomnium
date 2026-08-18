@@ -59,5 +59,5 @@ export async function insomniaFetch<T = any>({ method, path, data, sessionId, or
     }
   }
   const isJson = response.headers.get('content-type') === 'application/json' || path.match(/\.json$/);
-  return isJson ? response.json() : response.text();
+  return (isJson ? await response.json() : await response.text()) as T;
 }

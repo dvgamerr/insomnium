@@ -50,7 +50,7 @@ const request = https.get(npmSearchUrl, response => {
       }), {}),
     };
     writeFileSync(`${directory}/package.json`, JSON.stringify(packageJson, null, 2));
-    execSync(`npm install --prefix ${directory}`);
+    execSync(`bun install --cwd ${directory}`);
   });
 });
 

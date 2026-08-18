@@ -1,37 +1,65 @@
-import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
-import { GraphQLInfoOptions } from 'codemirror-graphql/info';
-import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
-import type { OpenDialogOptions } from 'electron';
-import { readFileSync } from 'fs';
-import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
-import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
-import { Maybe } from 'graphql-language-service';
-import React, { FC, useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { useRouteLoaderData } from 'react-router-dom';
-import { useLocalStorage } from 'react-use';
+import { LintOptions, ShowHintOptions, TextMarker } from "codemirror";
+import type { GraphQLHintOptions } from "codemirror-graphql/hint";
+import { GraphQLInfoOptions } from "codemirror-graphql/info";
+import { ModifiedGraphQLJumpOptions } from "codemirror-graphql/jump";
+import type { OpenDialogOptions } from "electron";
+import { readFileSync } from "fs";
+import {
+  DefinitionNode,
+  DocumentNode,
+  GraphQLNonNull,
+  GraphQLSchema,
+  Kind,
+  NonNullTypeNode,
+  OperationDefinitionNode,
+  parse,
+  typeFromAST,
+} from "graphql";
+import { buildClientSchema, getIntrospectionQuery } from "graphql/utilities";
+import { Maybe } from "graphql-language-service";
+import React, { FC, useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
+import { useRouteLoaderData } from "react-router-dom";
+import { useLocalStorage } from "react-use";
 
-import { CONTENT_TYPE_JSON } from '../../../../common/constants';
-import { database as db } from '../../../../common/database';
-import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { RENDER_PURPOSE_SEND } from '../../../../common/render';
-import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
-import * as models from '../../../../models';
-import type { Request } from '../../../../models/request';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../../network/network';
-import { guard } from '../../../../utils/guard';
-import { jsonPrettify } from '../../../../utils/prettify/json';
-import { RootLoaderData } from '../../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
-import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
-import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
-import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
-import { HelpTooltip } from '../../help-tooltip';
-import { Toolbar } from '../../key-value-editor/key-value-editor';
-import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
-import { TimeFromNow } from '../../time-from-now';
+import { CONTENT_TYPE_JSON } from "../../../../common/constants";
+import { database as db } from "../../../../common/database";
+import { markdownToHTML } from "../../../../common/markdown-to-html";
+import { RENDER_PURPOSE_SEND } from "../../../../common/render";
+import type { ResponsePatch } from "../../../../main/network/libcurl-promise";
+import * as models from "../../../../models";
+import type { Request } from "../../../../models/request";
+import {
+  fetchRequestData,
+  responseTransform,
+  sendCurlAndWriteTimeline,
+  tryToInterpolateRequest,
+  tryToTransformRequestWithPlugins,
+} from "../../../../network/network";
+import { guard } from "../../../../utils/guard";
+import { jsonPrettify } from "../../../../utils/prettify/json";
+import { RootLoaderData } from "../../../routes/root";
+import {
+  Dropdown,
+  DropdownButton,
+  DropdownItem,
+  DropdownSection,
+  ItemContent,
+} from "../../base/dropdown";
+import { CodeEditor, CodeEditorHandle } from "../../codemirror/code-editor";
+import { GraphQLExplorer } from "../../graph-ql-explorer/graph-ql-explorer";
+import { ActiveReference } from "../../graph-ql-explorer/graph-ql-types";
+import { HelpTooltip } from "../../help-tooltip";
+import { Toolbar } from "../../key-value-editor/key-value-editor";
+import { useDocBodyKeyboardShortcuts } from "../../keydown-binder";
+import { TimeFromNow } from "../../time-from-now";
 
-function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: string, variables?: string): string {
+function getGraphQLContent(
+  body: GraphQLBody,
+  query?: string,
+  operationName?: string,
+  variables?: string
+): string {
   // the body object is one dimensional, so we don't need to worry about shallow copying.
   const { query: originalQuery, ...optionalProps } = body;
   const content: GraphQLBody = { query: originalQuery };
@@ -59,7 +87,9 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
   return JSON.stringify(content);
 }
 
-const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
+const isOperationDefinition = (
+  def: DefinitionNode
+): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
 
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
@@ -80,14 +110,13 @@ const fetchGraphQLSchemaForRequest = async ({
   }
 
   try {
-
     const bodyJson = JSON.stringify({
       query: getIntrospectionQuery(),
-      operationName: 'IntrospectionQuery',
+      operationName: "IntrospectionQuery",
     });
     const introspectionRequest = await db.upsert(
       Object.assign({}, req, {
-        _id: req._id + '.graphql',
+        _id: req._id + ".graphql",
         settingMaxTimelineDataSize: 5000,
         parentId: req._id,
         isPrivate: true,
@@ -96,29 +125,42 @@ const fetchGraphQLSchemaForRequest = async ({
           mimeType: CONTENT_TYPE_JSON,
           text: bodyJson,
         },
-      }),
+      })
     );
-    const { request,
+    const {
+      request,
       environment,
       settings,
       clientCertificates,
       caCert,
-      activeEnvironmentId } = await fetchRequestData(introspectionRequest._id);
+      activeEnvironmentId,
+    } = await fetchRequestData(introspectionRequest._id);
 
-    const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
-    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+    const renderResult = await tryToInterpolateRequest(
+      request,
+      environment._id,
+      RENDER_PURPOSE_SEND
+    );
+    const renderedRequest = await tryToTransformRequestWithPlugins(
+      renderResult
+    );
     const res = await sendCurlAndWriteTimeline(
       renderedRequest,
       clientCertificates,
       caCert,
-      settings,
+      settings
     );
-    const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
+    const response = await responseTransform(
+      res,
+      activeEnvironmentId,
+      renderedRequest,
+      renderResult.context
+    );
     const statusCode = response.statusCode || 0;
     if (!response) {
       return {
         schemaFetchError: {
-          message: 'No response body received when fetching schema',
+          message: "No response body received when fetching schema",
         },
       };
     }
@@ -140,11 +182,12 @@ const fetchGraphQLSchemaForRequest = async ({
     }
     return {
       schemaFetchError: {
-        message: 'Something went wrong, no data was received from introspection query',
+        message:
+          "Something went wrong, no data was received from introspection query",
       },
     };
   } catch (err) {
-    console.error('[graphql] Failed to fetch schema', err);
+    console.error("[graphql] Failed to fetch schema", err);
     return { schemaFetchError: { message: err.message } };
   }
 };
@@ -185,34 +228,37 @@ export const GraphQLEditor: FC<Props> = ({
 }) => {
   let requestBody: GraphQLBody;
   try {
-    requestBody = JSON.parse(request.body.text || '');
+    requestBody = JSON.parse(request.body.text || "");
   } catch (err) {
-    requestBody = { query: '' };
+    requestBody = { query: "" };
   }
-  if (typeof requestBody.variables === 'string') {
+  if (typeof requestBody.variables === "string") {
     try {
       requestBody.variables = JSON.parse(requestBody.variables);
     } catch (err) {
-      requestBody.variables = '';
+      requestBody.variables = "";
     }
   }
   let documentAST;
   try {
-    documentAST = parse(requestBody.query || '');
+    documentAST = parse(requestBody.query || "");
   } catch (error) {
     documentAST = null;
   }
-  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [];
-  const operationName = requestBody.operationName || operations[0] || '';
+  const operations =
+    documentAST?.definitions
+      .filter(isOperationDefinition)
+      ?.map((def) => def.name?.value || "") || [];
+  const operationName = requestBody.operationName || operations[0] || "";
   const [state, setState] = useState<State>({
     body: {
-      query: requestBody.query || '',
+      query: requestBody.query || "",
       variables: requestBody.variables,
       operationName,
     },
     operations,
     hideSchemaFetchErrors: false,
-    variablesSyntaxError: '',
+    variablesSyntaxError: "",
     activeReference: null,
     explorerVisible: false,
     documentAST,
@@ -220,15 +266,20 @@ export const GraphQLEditor: FC<Props> = ({
   });
 
   const [automaticFetch, setAutoFetch] = useLocalStorage<boolean>(
-    'graphql.automaticFetch',
+    "graphql.automaticFetch",
     true
   );
   const [schema, setSchema] = useState<GraphQLSchema | null>(null);
-  const [schemaFetchError, setSchemaFetchError] = useState<{
-    message: string;
-    response?: ResponsePatch | null;
-  } | undefined>();
-  const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
+  const [schemaFetchError, setSchemaFetchError] = useState<
+    | {
+        message: string;
+        response?: ResponsePatch | null;
+      }
+    | undefined
+  >();
+  const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(
+    null
+  );
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
   const editorRef = useRef<CodeEditorHandle>(null);
 
@@ -254,14 +305,12 @@ export const GraphQLEditor: FC<Props> = ({
       isMounted = false;
     };
   }, [automaticFetch, environmentId, request._id, request.url, workspaceId]);
-  const {
-    settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  const { settings } = useRouteLoaderData("root") as RootLoaderData;
   const { editorIndentWithTabs, editorIndentSize } = settings;
   const beautifyRequestBody = async () => {
     const { body } = state;
-    const prettyQuery = (await import('prettier')).format(body.query, {
-      parser: 'graphql',
+    const prettyQuery = (await import("prettier")).format(body.query, {
+      parser: "graphql",
       useTabs: editorIndentWithTabs,
       tabWidth: editorIndentSize,
     });
@@ -278,36 +327,50 @@ export const GraphQLEditor: FC<Props> = ({
   const changeOperationName = (operationName: string) => {
     const content = getGraphQLContent(state.body, undefined, operationName);
     onChange(content);
-    setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
+    setState((prevState) => ({
+      ...prevState,
+      body: { ...prevState.body, operationName },
+    }));
   };
   const changeVariables = (variablesInput: string) => {
     try {
-      const variables = JSON.parse(variablesInput || '{}');
+      const variables = JSON.parse(variablesInput || "{}");
 
-      const content = getGraphQLContent(state.body, undefined, operationName, variables);
+      const content = getGraphQLContent(
+        state.body,
+        undefined,
+        operationName,
+        variables
+      );
       onChange(content);
-      setState(state => ({
+      setState((state) => ({
         ...state,
         body: { ...state.body, variables },
-        variablesSyntaxError: '',
+        variablesSyntaxError: "",
       }));
     } catch (err) {
-      setState(state => ({ ...state, variablesSyntaxError: err.message }));
+      setState((state) => ({ ...state, variablesSyntaxError: err.message }));
     }
   };
   const changeQuery = (query: string) => {
     try {
       const documentAST = parse(query);
-      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '');
+      const operations = documentAST.definitions
+        .filter(isOperationDefinition)
+        ?.map((def) => def.name?.value || "");
       // default to first operation when none selected
-      let operationName = state.body.operationName || operations[0] || '';
+      let operationName = state.body.operationName || operations[0] || "";
       if (operations.length && state.body.operationName) {
         const operationsChanged = state.operations.join() !== operations.join();
-        const operationNameWasChanged = !operations.includes(state.body.operationName);
+        const operationNameWasChanged = !operations.includes(
+          state.body.operationName
+        );
         if (operationsChanged && operationNameWasChanged) {
           // preserve selection during name change or fallback to first operation
-          const oldPosition = state.operations.indexOf(state.body.operationName);
-          operationName = operations[oldPosition] || operations[0] || '';
+          const oldPosition = state.operations.indexOf(
+            state.body.operationName
+          );
+          operationName = operations[oldPosition] || operations[0] || "";
         }
       }
 
@@ -318,18 +381,22 @@ export const GraphQLEditor: FC<Props> = ({
       const content = getGraphQLContent(state.body, query, operationName);
       onChange(content);
 
-      setState(state => ({
+      setState((state) => ({
         ...state,
         documentAST,
         body: { ...state.body, query, operationName },
         operations,
       }));
     } catch (error) {
-      console.warn('failed to parse', error);
-      setState(state => ({
+      console.warn("failed to parse", error);
+      setState((state) => ({
         ...state,
         documentAST: null,
-        body: { ...state.body, query, operationName: query ? state.body.operationName : 'Operations' },
+        body: {
+          ...state.body,
+          query,
+          operationName: query ? state.body.operationName : "Operations",
+        },
         operations: query ? state.operations : [],
       }));
     }
@@ -337,10 +404,10 @@ export const GraphQLEditor: FC<Props> = ({
 
   const renderSchemaFetchMessage = () => {
     if (!request.url) {
-      return '';
+      return "";
     }
     if (schemaIsFetching) {
-      return 'fetching schema...';
+      return "fetching schema...";
     }
     if (schemaLastFetchTime > 0) {
       return (
@@ -354,13 +421,13 @@ export const GraphQLEditor: FC<Props> = ({
 
   const loadAndSetLocalSchema = async () => {
     const options: OpenDialogOptions = {
-      title: 'Import GraphQL introspection schema',
-      buttonLabel: 'Import',
-      properties: ['openFile'],
+      title: "Import GraphQL introspection schema",
+      buttonLabel: "Import",
+      properties: ["openFile"],
       filters: [
         // @ts-expect-error https://github.com/electron/electron/pull/29322
         {
-          extensions: ['', 'json'],
+          extensions: ["", "json"],
         },
       ],
     };
@@ -373,14 +440,16 @@ export const GraphQLEditor: FC<Props> = ({
       const file = readFileSync(filePath);
       const content = JSON.parse(file.toString());
       if (!content.data) {
-        throw new Error('JSON file should have a data field with the introspection results');
+        throw new Error(
+          "JSON file should have a data field with the introspection results"
+        );
       }
       setSchema(buildClientSchema(content.data));
       setSchemaLastFetchTime(Date.now());
       setSchemaFetchError(undefined);
       setSchemaIsFetching(false);
     } catch (err) {
-      console.log('[graphql] ERROR: Failed to fetch schema', err);
+      console.log("[graphql] ERROR: Failed to fetch schema", err);
       setSchemaFetchError({
         message: `Failed to fetch schema: ${err.message}`,
         response: null,
@@ -398,22 +467,25 @@ export const GraphQLEditor: FC<Props> = ({
 
   const variableTypes: Record<string, GraphQLNonNull<any>> = {};
   if (schema) {
-    const operationDefinitions = state.documentAST?.definitions.filter(isOperationDefinition);
+    const operationDefinitions = state.documentAST?.definitions.filter(
+      isOperationDefinition
+    );
     operationDefinitions?.forEach(({ variableDefinitions }) => {
       variableDefinitions?.forEach(({ variable, type }) => {
         const inputType = typeFromAST(schema, type as NonNullTypeNode);
         if (inputType) {
           variableTypes[variable.name.value] = inputType;
         }
-      }
-      );
+      });
     });
   }
 
   // Create portal for GraphQL Explorer
   let graphQLExplorerPortal: React.ReactPortal | null = null;
-  const explorerContainer = document.querySelector('#graphql-explorer-container');
-  guard(explorerContainer, 'Failed to find #graphql-explorer-container');
+  const explorerContainer = document.querySelector(
+    "#graphql-explorer-container"
+  );
+  guard(explorerContainer, "Failed to find #graphql-explorer-container");
   if (explorerContainer) {
     graphQLExplorerPortal = ReactDOM.createPortal(
       <GraphQLExplorer
@@ -421,22 +493,29 @@ export const GraphQLEditor: FC<Props> = ({
         key={schemaLastFetchTime}
         visible={explorerVisible}
         reference={activeReference}
-        handleClose={() => setState(state => ({ ...state, explorerVisible: false }))}
+        handleClose={() =>
+          setState((state) => ({ ...state, explorerVisible: false }))
+        }
       />,
       explorerContainer
     );
   }
 
-  let graphqlOptions: {
-    hintOptions: ShowHintOptions;
-    infoOptions: GraphQLInfoOptions;
-    jumpOptions: ModifiedGraphQLJumpOptions;
-    lintOptions: LintOptions;
-  } | undefined;
-  const handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {
+  let graphqlOptions:
+    | {
+        hintOptions: ShowHintOptions & GraphQLHintOptions;
+        infoOptions: GraphQLInfoOptions;
+        jumpOptions: ModifiedGraphQLJumpOptions;
+        lintOptions: LintOptions;
+      }
+    | undefined;
+  const handleClickReference = (
+    reference: Maybe<ActiveReference>,
+    event: MouseEvent
+  ) => {
     event.preventDefault();
     if (reference) {
-      setState(state => ({
+      setState((state) => ({
         ...state,
         explorerVisible: true,
         activeReference: reference,
@@ -451,7 +530,10 @@ export const GraphQLEditor: FC<Props> = ({
       },
       infoOptions: {
         schema,
-        renderDescription: text => `<div class="markdown-preview__content">${markdownToHTML(text)}</div>`,
+        renderDescription: (text) =>
+          `<div class="markdown-preview__content">${markdownToHTML(
+            text
+          )}</div>`,
         onClick: handleClickReference,
       },
       jumpOptions: {
@@ -463,20 +545,21 @@ export const GraphQLEditor: FC<Props> = ({
       },
     };
   }
-  const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
+  const canShowSchema =
+    schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
   return (
     <div className="graphql-editor">
       <Toolbar>
         <Dropdown
-          aria-label='Operations Dropdown'
+          aria-label="Operations Dropdown"
           isDisabled={!state.operations.length}
           triggerButton={
             <DropdownButton className="btn btn--compact">
-              {state.body.operationName || 'Operations'}
+              {state.body.operationName || "Operations"}
             </DropdownButton>
           }
         >
-          {state.operations.map(operationName => (
+          {state.operations.map((operationName) => (
             <DropdownItem
               key={operationName}
               aria-label={`Operation ${operationName}`}
@@ -489,40 +572,45 @@ export const GraphQLEditor: FC<Props> = ({
           ))}
         </Dropdown>
         <Dropdown
-          aria-label='Schema Dropdown'
+          aria-label="Schema Dropdown"
           triggerButton={
             <DropdownButton
               className="btn btn--compact"
               disableHoverBehavior={false}
               removeBorderRadius
             >
-              <span>schema <i className="fa fa-wrench" /></span>
+              <span>
+                schema <i className="fa fa-wrench" />
+              </span>
             </DropdownButton>
           }
         >
-          <DropdownItem aria-label='Show Documentation'>
+          <DropdownItem aria-label="Show Documentation">
             <ItemContent
               isDisabled={!canShowSchema}
               icon="file-code-o"
               label="Show Documentation"
               onClick={() => {
-                setState(state => ({ ...state, explorerVisible: true }));
+                setState((state) => ({ ...state, explorerVisible: true }));
               }}
             />
           </DropdownItem>
           <DropdownSection
-            aria-label='Remote GraphQL Schema Section'
+            aria-label="Remote GraphQL Schema Section"
             title="Remote GraphQL Schema"
           >
-            <DropdownItem aria-label='Refresh Schema'>
+            <DropdownItem aria-label="Refresh Schema">
               <ItemContent
                 stayOpenAfterClick
-                icon={`refresh ${schemaIsFetching ? 'fa-spin' : ''}`}
+                icon={`refresh ${schemaIsFetching ? "fa-spin" : ""}`}
                 label="Refresh Schema"
                 onClick={async () => {
                   // First, "forget" preference to hide errors so they always show
                   // again after a refresh
-                  setState(state => ({ ...state, hideSchemaFetchErrors: false }));
+                  setState((state) => ({
+                    ...state,
+                    hideSchemaFetchErrors: false,
+                  }));
                   setSchemaIsFetching(true);
                   const newState = await fetchGraphQLSchemaForRequest({
                     requestId: request._id,
@@ -536,14 +624,16 @@ export const GraphQLEditor: FC<Props> = ({
                 }}
               />
             </DropdownItem>
-            <DropdownItem aria-label='Automatic Fetch'>
+            <DropdownItem aria-label="Automatic Fetch">
               <ItemContent
                 stayOpenAfterClick
-                icon={`toggle-${automaticFetch ? 'on' : 'off'}`}
+                icon={`toggle-${automaticFetch ? "on" : "off"}`}
                 label={
                   <>
-                    <span style={{ marginRight: '10px' }}>Automatic Fetch</span>
-                    <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
+                    <span style={{ marginRight: "10px" }}>Automatic Fetch</span>
+                    <HelpTooltip>
+                      Automatically fetch schema when request URL is modified
+                    </HelpTooltip>
                   </>
                 }
                 onClick={() => {
@@ -557,20 +647,29 @@ export const GraphQLEditor: FC<Props> = ({
             aria-label="Local GraphQL Schema Section"
             title="Local GraphQL Schema"
           >
-            <DropdownItem aria-label='Load schema from JSON'>
+            <DropdownItem aria-label="Load schema from JSON">
               <ItemContent
                 icon="file-code-o"
                 label={
                   <>
-                    <span style={{ marginRight: '10px' }}>Load schema from JSON</span>
+                    <span style={{ marginRight: "10px" }}>
+                      Load schema from JSON
+                    </span>
                     <HelpTooltip>
-                      Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
-                      convert GraphQL DSL to JSON.
+                      Run{" "}
+                      <i>
+                        apollo-codegen introspect-schema schema.graphql --output
+                        schema.json
+                      </i>{" "}
+                      to convert GraphQL DSL to JSON.
                     </HelpTooltip>
                   </>
                 }
                 onClick={() => {
-                  setState(state => ({ ...state, hideSchemaFetchErrors: false }));
+                  setState((state) => ({
+                    ...state,
+                    hideSchemaFetchErrors: false,
+                  }));
                   loadAndSetLocalSchema();
                 }}
               />
@@ -585,8 +684,8 @@ export const GraphQLEditor: FC<Props> = ({
           ref={editorRef}
           dynamicHeight
           showPrettifyButton
-          uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-          defaultValue={requestBody.query || ''}
+          uniquenessKey={uniquenessKey ? uniquenessKey + "::query" : undefined}
+          defaultValue={requestBody.query || ""}
           className={className}
           onChange={changeQuery}
           mode="graphql"
@@ -603,7 +702,12 @@ export const GraphQLEditor: FC<Props> = ({
             <div className="pull-right">
               <button
                 className="icon"
-                onClick={() => setState(state => ({ ...state, hideSchemaFetchErrors: true }))}
+                onClick={() =>
+                  setState((state) => ({
+                    ...state,
+                    hideSchemaFetchErrors: true,
+                  }))
+                }
               >
                 <i className="fa fa-times" />
               </button>
@@ -613,9 +717,7 @@ export const GraphQLEditor: FC<Props> = ({
           </div>
         )}
       </div>
-      <div className="graphql-editor__meta">
-        {renderSchemaFetchMessage()}
-      </div>
+      <div className="graphql-editor__meta">{renderSchemaFetchMessage()}</div>
       <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
         Query Variables
         <HelpTooltip className="space-left">
@@ -623,7 +725,9 @@ export const GraphQLEditor: FC<Props> = ({
           (JSON format)
         </HelpTooltip>
         {variablesSyntaxError && (
-          <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
+          <span className="text-danger italic pull-right">
+            {variablesSyntaxError}
+          </span>
         )}
       </h2>
       <div className="graphql-editor__variables">
@@ -631,7 +735,9 @@ export const GraphQLEditor: FC<Props> = ({
           id="graphql-editor-variables"
           dynamicHeight
           enableNunjucks
-          uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
+          uniquenessKey={
+            uniquenessKey ? uniquenessKey + "::variables" : undefined
+          }
           showPrettifyButton={false}
           defaultValue={jsonPrettify(JSON.stringify(requestBody.variables))}
           className={className}
@@ -646,7 +752,10 @@ export const GraphQLEditor: FC<Props> = ({
         />
       </div>
       <div className="pane__footer">
-        <button className="pull-right btn btn--compact" onClick={beautifyRequestBody}>
+        <button
+          className="pull-right btn btn--compact"
+          onClick={beautifyRequestBody}
+        >
           Prettify GraphQL
         </button>
       </div>

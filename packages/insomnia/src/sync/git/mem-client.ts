@@ -150,14 +150,14 @@ export class MemClient {
       dirEntry.children.push(file);
     }
 
-    const dataBuff: Buffer = data instanceof Buffer ? data : Buffer.from(data, encoding);
-    let newContents = Buffer.alloc(0);
+    const dataBuff = typeof data === 'string' ? Buffer.from(data, encoding) : data;
+    let newContents: string;
 
     if (flag[0] === 'w') {
-      newContents = dataBuff;
+      newContents = dataBuff.toString('base64');
     } else if (flag[0] === 'a') {
-      const contentsBuff: Buffer = Buffer.from(file.contents, 'base64');
-      newContents = Buffer.concat([contentsBuff, dataBuff]);
+      const contentsBuff = Buffer.from(file.contents, 'base64');
+      newContents = Buffer.concat([contentsBuff, dataBuff]).toString('base64');
     } else {
       throw new SystemError({
         code: 'EBADF',
@@ -168,7 +168,7 @@ export class MemClient {
       });
     }
 
-    file.contents = newContents.toString('base64');
+    file.contents = newContents;
     return Promise.resolve();
   }
 

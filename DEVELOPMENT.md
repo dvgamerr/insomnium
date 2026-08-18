@@ -19,7 +19,7 @@ There are a few more technologies and tools worth mentioning:
 
 ## Project Structure
 
-Insomnium uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspaces?v=true) to manage multiple npm packages within a single repository. There are currently the following package locations:
+Insomnium uses [Bun workspaces](https://bun.sh/docs/install/workspaces) to manage multiple packages within a single repository. There are currently the following package locations:
 
 - `/packages` contains related packages that are consumed by `insomnia` or externally.
 
@@ -76,7 +76,7 @@ This is just a brief summary of Insomnium's current technical debt.
 - [x] update react classes to function components
 - [x] remove excess packages
 - [x] migrate redux to remix
-- [x] migrate lerna to npm workspaces
+- [x] migrate lerna to Bun workspaces
 - [x] CI slow ~30m (now 10m)
 - [x] styling vision (react-aria + tailwind)
 - [ ] de-polymorph database
@@ -94,10 +94,10 @@ This is just a brief summary of Insomnium's current technical debt.
 
 <https://releases.electronjs.org/>
 
-bump the following node and electron versions
+bump the following Bun and Electron versions
 
 - `.npmrc`
-- `.nvmrc`
+- `package.json` (`packageManager` and `engines.bun`)
 - `packages/insomnia/package.json` electron and node-libcurl
 - `packages/insomnia-send-request/package.json` node-libcurl
 - `shell.nix`

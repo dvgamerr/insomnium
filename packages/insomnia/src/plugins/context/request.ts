@@ -226,7 +226,7 @@ export function init(
     // removeCookie (name: string) {}
   };
 
-  /* eslint-disable @typescript-eslint/ban-ts-comment */
+
   if (readOnly) {
     // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setUrl;
@@ -265,7 +265,7 @@ export function init(
     // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setBody;
   }
-  /* eslint-enable @typescript-eslint/ban-ts-comment */
+
 
   return {
     request,

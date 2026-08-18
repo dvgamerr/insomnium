@@ -20,21 +20,20 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v3
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
 
       - name: Install packages
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: bun run lint
 
       # - name: Lint markdown
-      #   run: npm run lint:markdown
+      #   run: bun run lint:markdown
       
   Test:
     runs-on: ubuntu-latest
@@ -44,41 +43,40 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v3
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
-          cache-dependency-path: package-lock.json
 
       - name: Install packages
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Type checks
-        run: npm run type-check
+        run: bun run type-check
 
       - name: Test Insomnium
         working-directory: packages/insomnia
-        run: npm test
+        run: bun test
         if: always() # Run this even if the previous step already failed the run
 
       - name: Test Insomnium Testing
         working-directory: packages/insomnia-testing
-        run: npm test
+        run: bun test
         if: always() # Run this even if the previous step already failed the run
 
       # - name: Build app for smoke tests
-      #   run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
+      #   run: NODE_OPTIONS='--max_old_space_size=6144' bun run app-build
 
       # - name: Smoke test electron app
       #   # Partial Smoke test run, for regular CI triggers
       #   if: ${{ !startsWith(github.head_ref, 'release/') }}
-      #   run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+      #   run: bun run test:build -w packages/insomnia-smoke-test -- --project=Smoke
 
       # - name: Prerelease test electron app
       #   # Full Smoke test run, for Release PRs
       #   if: ${{ startsWith(github.head_ref, 'release/') }}
-      #   run: npm run test:build -w packages/insomnia-smoke-test -- --project=Default
+      #   run: bun run test:build -w packages/insomnia-smoke-test -- --project=Default
 
       # # 
 

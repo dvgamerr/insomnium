@@ -5,13 +5,13 @@ import xpath, { SelectedValue } from 'xpath';
  * Query an XML blob with XPath
  */
 export const queryXPath = (xml: string, query?: string) => {
-  const dom = new DOMParser().parseFromString(xml);
+  const dom = new DOMParser().parseFromString(xml, 'text/xml');
   let selectedValues: SelectedValue[] = [];
   if (query === undefined) {
     throw new Error('Must pass an XPath query.');
   }
   try {
-    selectedValues = xpath.select(query, dom);
+    selectedValues = xpath.select(query, dom as unknown as Node);
   } catch (err) {
     throw new Error(`Invalid XPath query: ${query}`);
   }

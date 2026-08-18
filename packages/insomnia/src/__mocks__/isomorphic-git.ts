@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import isomorphicGitOriginal from 'isomorphic-git';
 
-// eslint-disable-next-line filenames/match-exported
+
 const git = jest.requireActual('isomorphic-git') as typeof isomorphicGitOriginal;
 const mock = jest.createMockFromModule('isomorphic-git') as typeof isomorphicGitOriginal;
 

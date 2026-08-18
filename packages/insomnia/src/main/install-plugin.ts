@@ -161,7 +161,7 @@ async function _installPluginToTmpDir(lookupName: string) {
   return new Promise<{ tmpDir: string }>(async (resolve, reject) => {
     const tmpDir = path.join(electron.app.getPath('temp'), `${lookupName}-${Date.now()}`);
     await mkdir(tmpDir, { recursive: true });
-    // Write a dummy package.json so that yarn doesn't traverse up the directory tree
+    // Write a dummy package.json so that Yarn doesn't traverse up the directory tree
     await writeFile(path.join(tmpDir, 'package.json'), JSON.stringify({ license: 'ISC', workspaces: [] }), 'utf-8');
 
     console.log(`[plugins] Installing plugin to ${tmpDir}`);

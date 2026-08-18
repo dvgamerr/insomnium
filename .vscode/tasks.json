@@ -14,7 +14,7 @@
           "NODE_ENV": "development"
         }
       },
-      "command": "npm run build:main.min.js"
+      "command": "bun run build:main.min.js"
     },
     {
       "label": "Insomnium: Compile Renderer (Watch)",
@@ -61,7 +61,7 @@
     },
     {
       "label": "Inso: Compile (Watch)",
-      "detail": "npm start",
+      "detail": "bun run start",
       "type": "shell",
       "promptOnClose": false,
       "isBackground": true,
@@ -91,7 +91,7 @@
           }
         }
       },
-      "command": "npm run inso-start"
+      "command": "bun run inso-start"
     }
   ],
   "inputs": [

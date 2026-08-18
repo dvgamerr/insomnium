@@ -365,7 +365,7 @@ export class GitVCS {
 
   async push(gitCredentials?: GitCredentials | null, force = false) {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
-    // eslint-disable-next-line no-unreachable
+
     const response: git.PushResult = await git.push({
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
