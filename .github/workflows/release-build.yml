@@ -27,13 +27,12 @@ jobs:
             csc_key_password_secret: ""
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
+          bun-version: "1.3.14"
 
       - name: Install packages
         run: bun install --frozen-lockfile
@@ -68,7 +67,7 @@ jobs:
       # - name: Package inso
       #   run: |
       #     echo "Replacing electron binary with node binary"
-      #     node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+      #     bun x node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
       #     bun run inso-package
       #   env:
       #     VERSION: ${{ env.INSO_VERSION }}
@@ -122,7 +121,7 @@ jobs:
       #     docker save insomnia-inso:temp -o ./packages/insomnia-inso/artifacts/inso-docker-image.tar
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts
@@ -140,7 +139,7 @@ jobs:
   # packages/insomnia-inso/artifacts/*
 
   # - name: Upload source assets for Sentry
-  #   uses: actions/upload-artifact@v3
+  #   uses: actions/upload-artifact@v7
   #   with:
   #     name: ${{ matrix.os }}-sentry
   #     path: |
@@ -161,7 +160,7 @@ jobs:
           BRANCH: ${{ github.ref_name }}
 
       - name: update-pull-request
-        uses: kt3k/update-pr-description@v2.0.0
+        uses: kt3k/update-pr-description@v2
         with:
           pr_body: |
             Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
